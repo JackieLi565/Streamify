@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Room } from "../../modules/room/room";
 import Storage from "../../modules/storage/storage";
+import { generateRoomCode } from "../../helpers/generator/generator";
 const storage = Storage.instance;
 /**
  *
@@ -15,13 +16,11 @@ const storage = Storage.instance;
 export async function CreateRoom(req: Request, res: Response) {
   const { method } = req;
 
-  const code = "123";
-  console.log("hit");
+  const code = generateRoomCode(3);
   try {
     if (method !== "POST") throw new Error("Inccorect HTTP Request Method");
     const room = new Room(code);
     storage.newRoom = room;
-    console.log(storage.bucket);
     res.status(200).json({ code });
   } catch (e: any) {
     res.status(400).send("Error ... somewhere .. idk . where");
@@ -30,7 +29,6 @@ export async function CreateRoom(req: Request, res: Response) {
 
 export async function RoomData(req: Request, res: Response) {
   const { method, params } = req;
-  console.log(params.roomID);
 
   try {
     if (method !== "GET") throw new Error("Inccorect HTTP Request Method");
