@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { Room } from "../../modules/room/room";
-import Storage from "../../modules/storage/storage";
-import { generateRoomCode } from "../../helpers/generator/generator";
+import { Room } from "../../modules/room";
+import Storage from "../../modules/storage";
+import { generateRoomCode } from "../../helpers/generator";
 const storage = Storage.instance;
 /**
  *
@@ -20,7 +20,8 @@ export async function CreateRoom(req: Request, res: Response) {
   try {
     if (method !== "POST") throw new Error("Inccorect HTTP Request Method");
     const room = new Room(code);
-    storage.newRoom = room;
+    storage.addRoom(room);
+
     res.status(200).json({ code });
   } catch (e: any) {
     res.status(400).send("Error ... somewhere .. idk . where");

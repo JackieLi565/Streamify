@@ -1,4 +1,4 @@
-import { Room } from "../room/room";
+import { Room } from "./room";
 
 export default class Storage {
   private static _instance: Storage;
@@ -12,10 +12,6 @@ export default class Storage {
 
   constructor() {
     this._intervalID = setInterval(this.removeEmptyRoom, 10000);
-  }
-
-  set newRoom(room: Room) {
-    this._bucket.push(room);
   }
 
   get roomCount() {
@@ -50,5 +46,9 @@ export default class Storage {
       }
     }
     throw new Error("Room not found");
+  }
+
+  addRoom(room: Room) {
+    this._bucket.push(room);
   }
 }
