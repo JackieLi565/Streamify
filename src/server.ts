@@ -39,6 +39,7 @@ io.on("connection", (socket) => {
         const room = storage.getRoom(roomID);
         room.newUser(user);
         socket.join(roomID);
+        console.log("a user has connected", userID);
         io.to(roomID).emit("receive_message", room.chat);
       } catch (e: any) {
         console.log(e.message);
@@ -46,15 +47,22 @@ io.on("connection", (socket) => {
     }
   );
 
-  socket.on("leave_room", (roomID: string) => {
-    try {
-      const room = storage.getRoom(roomID);
-      room.removeUser(socket.id);
-      socket.leave(roomID);
-    } catch (e: any) {
-      console.log(e.message);
+  socket.on(
+    "leave_room",
+    (roomID: string, callback: (param: { status: string }) => void) => {
+      try {
+        const room = storage.getRoom(roomID);
+        room.removeUser(socket.id);
+        socket.leave(roomID);
+        console.log("a user has left", userID);
+        callback({
+          status: "ok",
+        });
+      } catch (e: any) {
+        console.log(e.message);
+      }
     }
-  });
+  );
 
   MessageHandler(socket);
 });

@@ -13,7 +13,6 @@ export default function MessageHandler(socket: Socket) {
         const room = storage.getRoom(roomID);
         room.newMessage({ userID, message });
         io.to(roomID).emit("receive_message", room.chat);
-        console.log(room.chat);
       } catch (e: any) {
         console.log(e.message);
       }
