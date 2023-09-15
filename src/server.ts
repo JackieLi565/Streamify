@@ -1,12 +1,9 @@
-import express from "express";
+import express, { Request } from "express";
 import dotenv from "dotenv";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import Storage from "../modules/storage";
-import { roomRouter } from "./routers/room-router";
-import User from "../modules/user";
-import MessageHandler from "./socket-handlers/message-handler";
+import client from "./lib/redis";
 dotenv.config();
 const app = express();
 const port = process.env.LOCAL_PORT;
@@ -27,52 +24,15 @@ export const io = new Server(server, {
  * Handle Chat comms
  * Handle Video PLayback
  */
-io.on("connection", (socket) => {
-  const storage = Storage.instance;
-  const userID = socket.id;
 
-  socket.on(
-    "join_room",
-    ({ roomID, name }: { roomID: string; name: string }) => {
-      try {
-        const user = new User(userID, name, roomID);
-        const room = storage.getRoom(roomID);
-        room.newUser(user);
-        socket.join(roomID);
-        console.log("a user has connected", userID);
-        io.to(roomID).emit("receive_message", room.chat);
-      } catch (e: any) {
-        console.log(e.message);
-      }
-    }
-  );
+app.get("/", async function (req, res) {
+  await client.set("check", "bar");
+  const value = await client.get("check");
+  console.log(value);
 
-  socket.on(
-    "leave_room",
-    (roomID: string, callback: (param: { status: string }) => void) => {
-      try {
-        const room = storage.getRoom(roomID);
-        room.removeUser(socket.id);
-        socket.leave(roomID);
-        console.log("a user has left", userID);
-        callback({
-          status: "ok",
-        });
-      } catch (e: any) {
-        console.log(e.message);
-      }
-    }
-  );
-
-  MessageHandler(socket);
+  res.send("OK");
 });
 
-/** HTTP
- *
- */
-app.use("/api/room", roomRouter);
-
 server.listen(port, () => {
-  Storage.instance;
   console.log("Socket Server Running");
 });
