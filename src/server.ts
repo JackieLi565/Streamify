@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import axios from "axios";
 // import client from "./lib/redis"; // redis disabled for production use as a lack of auth on the app
 import {
   Callback,
@@ -13,6 +14,7 @@ import {
 } from "./types/types";
 import generateRandomHash from "./utils/generateHash/generateHash";
 import { ServerCache } from "./db/cache";
+import { SearchListResponse } from "./types/youtube";
 dotenv.config();
 const app = express();
 const port = process.env.LOCAL_PORT;
@@ -33,6 +35,32 @@ const sc = new ServerCache();
 
 io.on("connection", (socket) => {
   const clientID = socket.id;
+
+  async function Youtube(query: string, callback: CallbackFunc) {
+    try {
+      const response = await axios.get<SearchListResponse>(
+        `https://www.googleapis.com/youtube/v3/search?key=${process.env.YOUTUBE_API_KEY}&q=${query}&type=video&part=snippet&maxResults=8`
+      );
+      const data = response.data.items.map((video) => {
+        return {
+          title: video.snippet.title,
+          channel: video.snippet.channelTitle,
+          videoId: video.id.videoId,
+          thumbnails: video.snippet.thumbnails,
+        };
+      });
+
+      socket.to(clientID).emit("video-search", data);
+    } catch (e: any) {
+      const responseData: Callback = {
+        success: false,
+        error: true,
+        message: e.message,
+      };
+      callback(responseData);
+    }
+  }
+  socket.on("youtube-search", Youtube);
   /**
    *
    * @param { string } roomID
